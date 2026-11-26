@@ -18,7 +18,8 @@ const getProductByIdController = async (req, res) => {
     if (!product) return res.status(404).json({ error: "Produto não encontrado ou não pertence à sua vizinhança." });
     res.status(200).json({ message: "Produto obtido com sucesso", product });
   } catch (error) {
-
+    console.error("CONTROLLER ERROR: getProductByIdController -", error.message);
+    res.status(500).json({ error: "Erro interno ao buscar o produto." });
   }
 };
 
@@ -36,7 +37,10 @@ const getProductByTypeController = async (req, res) => {
     const limit = parseInt(req.query.limit) || 12;
     const result = await productService.getProductByTypeAndNeighborhood(typeId, user.VizinhançaidVizinhança, page, limit); 
     res.status(200).json({ message: "Produtos obtidos com sucesso por tipo", ...result });
-  } catch (error) { }
+  } catch (error) {
+    console.error("CONTROLLER ERROR: getProductByTypeController -", error.message);
+    res.status(500).json({ error: "Erro interno ao buscar produtos por tipo." });
+  }
 };
 
 const getProductController = async (req, res) => {
@@ -206,17 +210,24 @@ const getAllProductsAdminController = async (req, res) => {
 
 const getProductsByMyNeighborhoodController = async (req, res) => {
   try {
-    if (!req.user || !req.user.idUtilizador) {}
+    if (!req.user || !req.user.idUtilizador) {
+      return res.status(401).json({ error: "Não autenticado." });
+    }
     const userId = req.user.idUtilizador;
     const user = await userService.fetchUserByIdInternal(userId);
-    if (!user || (user.VizinhançaidVizinhança === null || user.VizinhançaidVizinhança === undefined)) {}
+    if (!user || (user.VizinhançaidVizinhança === null || user.VizinhançaidVizinhança === undefined)) {
+      return res.status(400).json({ error: "Utilizador ou vizinhança inválidos." });
+    }
     const neighborhoodId = user.VizinhançaidVizinhança;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12; 
 
     const result = await productService.getProductsByNeighborhoodForUser(neighborhoodId, page, limit); 
     res.status(200).json({ message: "Produtos da vizinhança obtidos com sucesso", ...result });
-  } catch (error) {}
+  } catch (error) {
+    console.error("CONTROLLER ERROR: getProductsByMyNeighborhoodController -", error.message);
+    res.status(500).json({ error: "Erro interno ao buscar produtos da vizinhança." });
+  }
 };
 
 // Crie o diretório de uploads se não existir
@@ -371,7 +382,7 @@ const createProductController = async (req, res, next) => {
       // Se nenhum arquivo foi enviado, mas um URL de imagem foi passado no campo 'imagemProduto' do FormData
       const urlInput = req.body.imagemProduto.trim();
       if (!(urlInput.startsWith('http://') || urlInput.startsWith('https://'))) {
-         if (req.file && req.file.path) { try { fs.unlinkSync(req.file.path); } catch(e){} } // Caso raro
+         if (req.file && req.file.path) { try { fs.unlinkSync(req.file.path); } catch (e) { console.error("Erro ao apagar ficheiro enviado:", e); } } // Caso raro
         return res.status(400).json({ error: "URL da imagem fornecido no campo 'imagemProduto' é inválido." });
       }
       finalImagemProdutoUrl = urlInput;
@@ -409,7 +420,7 @@ const createProductController = async (req, res, next) => {
         isNaN(productData.estadoProdutoidEstadoProduto) ||
         isNaN(productData.EstabelecimentoidEstabelecimento)
     ) {
-        if (req.file && req.file.path) { try { fs.unlinkSync(req.file.path); } catch(e){} }
+        if (req.file && req.file.path) { try { fs.unlinkSync(req.file.path); } catch (e) { console.error("Erro ao apagar ficheiro enviado:", e); } }
         return res.status(400).json({ error: "Valores numéricos inválidos para preço, stock ou IDs." });
     }
 
@@ -459,7 +470,7 @@ const updateProductController = async (req, res, next) => {
       } else if (typeof updates.imagemProduto === 'string') {
         const urlInput = updates.imagemProduto.trim();
         if (!(urlInput.startsWith('http://') || urlInput.startsWith('https://') || urlInput.startsWith('/uploads/'))) {
-          if (req.file && req.file.path) try {fs.unlinkSync(req.file.path); } catch(e){} // Se houve upload falhado por causa disto
+          if (req.file && req.file.path) try { fs.unlinkSync(req.file.path); } catch (e) { console.error("Erro ao apagar ficheiro enviado:", e); } // Se houve upload falhado por causa disto
           return res.status(400).json({ error: "URL da imagem fornecido é inválido para atualização." });
         }
         updates.imagemProduto = urlInput;
