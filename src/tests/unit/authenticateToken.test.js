@@ -17,14 +17,14 @@ const buildApp = () => {
 };
 
 describe("authenticateToken", () => {
-  test("sem cabeçalho Authorization responde 401", async () => {
+  test("should answer 401 without an Authorization header", async () => {
     const response = await request(buildApp()).get("/protected");
 
     expect(response.status).toBe(401);
     expect(response.body).toEqual({ error: "Token not found" });
   });
 
-  test("com token inválido responde 403", async () => {
+  test("should answer 403 with an invalid token", async () => {
     const response = await request(buildApp())
       .get("/protected")
       .set("Authorization", "Bearer token-invalido");
@@ -33,7 +33,7 @@ describe("authenticateToken", () => {
     expect(response.body).toEqual({ error: "Unauthorized" });
   });
 
-  test("com token válido passa o utilizador para req.user", async () => {
+  test("should expose the token payload on req.user", async () => {
     const token = jwt.sign({ idUtilizador: 7 }, SECRET_KEY);
 
     const response = await request(buildApp())
