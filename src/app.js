@@ -1,11 +1,13 @@
 const express = require("express");
 const cors = require('cors');
+const path = require('path'); 
+const multer = require('multer');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors({
-  origin: 'http://localhost:5173', //Isto permite que apenas requisições vindas do frontend que corre em localhost:5173
-  credentials: true //permite que a requisição envie cookies, headers de autenticação, tokens ou sessões, uu seja, permite enviar/receber cookies entre o frontend e backend, bom para a autenticação
+  origin: 'http://localhost:5173', 
+  credentials: true 
 }));
 
 
@@ -25,10 +27,20 @@ const establishmentRoutes = require("./routes/establishmentRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const productTypesRoutes = require("./routes/productTypesRoutes")
+const productStatusRoutes = require('./routes/productStatusRoutes'); 
+const businessProcessesRoutes = require('./routes/businessProcessRoutes');
+
+
 
 app.use(express.json());
 
-app.use('/uploads', express.static('src/uploads'));
+// app.use('/uploads', express.static('src/uploads'));
+//app.use('/uploads', express.static(path.join(__dirname, 'src', 'uploads'))); 
+app.use(express.urlencoded({ extended: true })); 
+const staticUploadsPath = path.join(__dirname,'uploads');
+console.log("Configurando express.static para servir '/uploads' de:", staticUploadsPath); // Para depuração
+app.use('/uploads', express.static(staticUploadsPath));
+
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/taskCreations", tasksCreationRoutes);
@@ -41,7 +53,10 @@ app.use("/api/taskRealizations", taskRealizationRoutes);
 app.use("/api/establishments", establishmentRoutes);
 app.use("/api/feedbacks", feedbackRoutes);
 app.use("/api/categories", categoryRoutes);
-app.use('/api/product-types', productTypesRoutes)
+app.use('/api/product-types', productTypesRoutes);
+app.use('/api/product-status', productStatusRoutes);
+app.use('/api/businessProcesses', businessProcessesRoutes);
+
 
 try {
   db.sequelize.authenticate();

@@ -7,6 +7,8 @@ const authenticateToken = require("../middlewares/authenticateToken");
 //admin para estabelecimentos
 router.delete("/:addressId", sqlInjectionGuard, authenticateToken, addressController.deleteAddressController);
 router.patch("/:addressId", sqlInjectionGuard, authenticateToken, addressController.updateAddressController); 
+router.get('/', sqlInjectionGuard, authenticateToken,addressController.getAllAddressesController); 
+
 //Vizinho
 router.post("/", sqlInjectionGuard, addressController.createAddressController);
 

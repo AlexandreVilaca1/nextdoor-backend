@@ -55,8 +55,24 @@ const deleteNeighborhoodController = async (req, res) => {
   }
 };
 
+const getNeighborhoodByNameController = async (req, res) => {
+  try {
+    const { nomeFreguesia } = req.params;
+    const neighborhood = await neighborhoodService.findNeighborhoodByName(nomeFreguesia); // Precisa criar esta função no service
+    if (neighborhood) {
+      res.status(200).json({ neighborhood });
+    } else {
+      res.status(404).json({ message: "Neighborhood not found." });
+    }
+  } catch (error) {
+    console.error("Error in getNeighborhoodByNameController:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   getNeighborhoodController,
   createNeighborhoodController,
   deleteNeighborhoodController,
+  getNeighborhoodByNameController,
 };

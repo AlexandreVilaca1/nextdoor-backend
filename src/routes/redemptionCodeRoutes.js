@@ -7,4 +7,7 @@ const authenticateToken = require("../middlewares/authenticateToken");
 //Apenas vai mostrar códigos associados ao próprio utilizador
 router.get('/', sqlInjectionGuard, authenticateToken, redemptionCodeController.getRedemptionCodesController);
 router.post('/', sqlInjectionGuard, authenticateToken, redemptionCodeController.createRedemptionCodeController);
+// Para Admin
+router.get('/all', sqlInjectionGuard, authenticateToken, redemptionCodeController.getAllRedemptionCodesAdminController);
+
 module.exports = router;

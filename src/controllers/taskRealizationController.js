@@ -60,7 +60,6 @@
     } = req.body;
     
     try {
-      //Verificação para que o utilizador logado não possa realizar as suas tarefas e apenas possa realizar uma tarefa de cada vez
       const user = await userService.getUser(userId);
       const neighborhoodId = user.VizinhançaidVizinhança;
       const taskCreation = await taskCreationService.getTaskCreationById(criacaoTarefaidTarefaCriada, neighborhoodId);
@@ -89,23 +88,34 @@
     }
   };
 
-  //Apenas vai servir para alterar o estado da realização da tarefa
   const updateTaskRealizationController = async (req, res) => {
-    const { taskRealizationId } = req.params;
-    const userId = req.user.idUtilizador;
-    const updatedFields = req.body;
-    try {
-      const updated = await taskRealizationService.updateTaskRealization(
-        taskRealizationId,
-        updatedFields,
-        userId
-      );
+  const { taskRealizationId } = req.params;
+  const userId = req.user.idUtilizador;
+  const updatedFields = req.body;
 
-      res.status(200).json({ message: "Task updated successfully", updatedFields: updated });
-    } catch (error) {
-      res.status(500).json({ error: "Task not found" });
+  try {
+    const result = await taskRealizationService.updateTaskRealization(
+      taskRealizationId,
+      updatedFields,
+      userId
+    );
+
+    res.status(200).json({
+      message: 'Task Realization Updated Sucessfully',
+      result,
+    });
+  } catch (error) {
+    if (error.message === 'Não autorizado a atualizar esta tarefa') {
+      return res.status(403).json({ error: error.message });
     }
-  };
+
+    if (error.message === 'Realização da tarefa não encontrada') {
+      return res.status(404).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: 'Error updating Task' });
+  }
+};
 
   const deleteTaskRealizationController = async (req, res) => {
     const { taskRealizationId } = req.params;

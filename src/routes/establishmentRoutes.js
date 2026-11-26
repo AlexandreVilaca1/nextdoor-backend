@@ -9,6 +9,8 @@ router.get("/neighborhood/:neighborhoodId", sqlInjectionGuard, authenticateToken
 router.post("/", sqlInjectionGuard, authenticateToken, establishmentController.createEstablishmentController);
 router.patch("/:establishmentId", sqlInjectionGuard, authenticateToken, establishmentController.updateEstablishmentController);
 router.delete("/:establishmentId", sqlInjectionGuard, authenticateToken, establishmentController.deleteEstablishmentController);
+router.get('/all', sqlInjectionGuard, authenticateToken, establishmentController.getAllEstablishmentsAdminController);
+
 //Neighboors
 router.get("/", sqlInjectionGuard, authenticateToken, establishmentController.getEstablishmentsController); //Um vizinho poderá ver os establecimentos associados á sua viziznhança
 router.get("/:establishmentId", sqlInjectionGuard, authenticateToken, establishmentController.getEstablishmentByIdController);

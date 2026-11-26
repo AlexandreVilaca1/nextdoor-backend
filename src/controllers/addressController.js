@@ -43,8 +43,26 @@ const deleteAddressController = async (req, res) => {
   }
 };
 
+const getAllAddressesController = async (req, res) => {
+  try {
+    const addresses = await addressService.findAllAddresses(); // Ou o nome que você deu à sua função no serviço
+
+    if (!addresses || addresses.length === 0) {
+      return res.status(200).json([]); // Retorna um array vazio se não houver endereços
+    }
+
+    res.status(200).json(addresses);
+
+  } catch (error) {
+    console.error("Erro no getAllAddressesController:", error);
+
+    res.status(500).json({ message: "Erro ao buscar endereços no servidor." });
+  }
+};
+
 module.exports = {
   createAddressController,
   updateAddressController,
   deleteAddressController,
+  getAllAddressesController,
 };
