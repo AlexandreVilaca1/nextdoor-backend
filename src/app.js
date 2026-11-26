@@ -58,12 +58,17 @@ app.use('/api/product-status', productStatusRoutes);
 app.use('/api/businessProcesses', businessProcessesRoutes);
 
 
-try {
-  db.sequelize.authenticate();
-  console.log("Database connection successfully established.");
-  app.listen(PORT, () => {
-    console.log(`Server running on port: ${PORT}`);
-  });
-} catch (error) {
-  console.error("Unable to connect to database:", error);
-}
+const startServer = async () => {
+  try {
+    await db.sequelize.authenticate();
+    console.log("Database connection successfully established.");
+    app.listen(PORT, () => {
+      console.log(`Server running on port: ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Unable to connect to database:", error);
+    process.exitCode = 1;
+  }
+};
+
+startServer();
