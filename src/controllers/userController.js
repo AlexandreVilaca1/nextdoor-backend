@@ -348,9 +348,6 @@ const getUserProfileController = async (req, res) => {
         .json({ error: "Token inválido ou não fornecido." });
     }
     const userId = req.user.idUtilizador;
-    console.log(
-      `USER PROFILE CONTROLLER: Buscando perfil para userId: ${userId}`
-    );
 
     const user = await userService.getUserProfileData(userId);
 

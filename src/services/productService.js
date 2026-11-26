@@ -153,7 +153,6 @@ const deleteProduct = async (productId) => {
 const getAllProductsAdmin = async (page = 1, limit = 1000) => {
   try {
     const offset = (page - 1) * limit;
-    console.log("SERVICE: getAllProductsAdmin - Adicionando include para estadoProduto");
 
     const { count, rows } = await Produto.findAndCountAll({
       limit: parseInt(limit, 10),
@@ -179,7 +178,6 @@ const getAllProductsAdmin = async (page = 1, limit = 1000) => {
       distinct: true,
     });
 
-    console.log(`SERVICE: getAllProductsAdmin - Encontrados ${rows.length} produtos com todas as associações.`);
     return { products: rows, totalItems: count, totalPages: Math.ceil(count / limit), currentPage: parseInt(page, 10) };
 
   } catch (error) {
@@ -196,7 +194,6 @@ const getAllProductsAdmin = async (page = 1, limit = 1000) => {
 // E a função para buscar por vizinhança para utilizadores
 const getProductsByNeighborhoodForUser = async (neighborhoodId, page = 1, limit = 12) => {
     try {
-        console.log(`SERVICE getProductsByNeighborhoodForUser - Buscando produtos para neighborhoodId: ${neighborhoodId}, page: ${page}, limit: ${limit}`);
         const offset = (page - 1) * limit;
         const queryOptions = {
             attributes: [ 
@@ -239,7 +236,6 @@ const getProductsByNeighborhoodForUser = async (neighborhoodId, page = 1, limit 
 
 const getProductByIdAndNeighborhood = async (productId, neighborhoodId) => {
   try {
-    console.log(`SERVICE getProductByIdAndNeighborhood - productId: ${productId}, neighborhoodId: ${neighborhoodId}`);
     const product = await Produto.findOne({
       attributes: [],
       where: {
@@ -266,7 +262,6 @@ const getProductByIdAndNeighborhood = async (productId, neighborhoodId) => {
 
 const getProductByTypeAndNeighborhood = async (typeId, neighborhoodId, page = 1, limit = 12) => {
   try {
-    console.log(`SERVICE getProductByTypeAndNeighborhood - typeId: ${typeId}, neighborhoodId: ${neighborhoodId}, page: ${page}, limit: ${limit}`);
     const offset = (page - 1) * limit;
     const { count, rows } = await Produto.findAndCountAll({
       attributes: [ /* ... define os atributos ... */ ],
@@ -298,7 +293,6 @@ const getProductByTypeAndNeighborhood = async (typeId, neighborhoodId, page = 1,
 
 const getProductsByEstablishmentAndNeighborhood = async (establishmentId, neighborhoodId, page = 1, limit = 12) => {
   try {
-    console.log(`SERVICE getProductsByEstablishmentAndNeighborhood - Buscando produtos para establishmentId: ${establishmentId}, neighborhoodId: ${neighborhoodId}, page: ${page}, limit: ${limit}`);
     const offset = (page - 1) * limit;
 
     const queryOptions = {
@@ -345,10 +339,8 @@ const getProductsByEstablishmentAndNeighborhood = async (establishmentId, neighb
       // logging: console.log // Descomenta para ver a query SQL gerada, útil para depuração
     };
 
-    console.log("SERVICE getProductsByEstablishmentAndNeighborhood - Opções da Query:", JSON.stringify(queryOptions, null, 2));
     const { count, rows } = await Produto.findAndCountAll(queryOptions);
 
-    console.log(`SERVICE getProductsByEstablishmentAndNeighborhood - Produtos encontrados: ${rows.length}, Total: ${count}`);
     if (rows.length > 0) {
         // console.log("SERVICE getProductsByEstablishmentAndNeighborhood - Exemplo de produto:", JSON.stringify(rows[0].get({ plain: true }), null, 2));
     }

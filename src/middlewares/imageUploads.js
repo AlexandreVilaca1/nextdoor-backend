@@ -13,15 +13,12 @@ const UPLOADS_DIR_PATH = path.resolve(__dirname, '../uploads');
 if (!fs.existsSync(UPLOADS_DIR_PATH)) {
   try {
     fs.mkdirSync(UPLOADS_DIR_PATH, { recursive: true });
-    console.log(`Diretório de uploads criado com sucesso em: ${UPLOADS_DIR_PATH}`);
   } catch (err) {
     console.error(`Erro ao criar o diretório de uploads em ${UPLOADS_DIR_PATH}:`, err);
     // Considere lançar um erro aqui ou tratar de forma que impeça a aplicação de continuar
     // se o diretório de uploads for essencial e não puder ser criado.
     // process.exit(1); // Exemplo drástico
   }
-} else {
-    console.log(`Diretório de uploads já existe em: ${UPLOADS_DIR_PATH}`);
 }
 
 const storage = multer.diskStorage({

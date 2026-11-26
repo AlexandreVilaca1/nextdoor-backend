@@ -12,7 +12,6 @@ const getProductByIdController = async (req, res) => {
     if (!user || (user.VizinhançaidVizinhança === null || user.VizinhançaidVizinhança === undefined)) {
         return res.status(400).json({ error: "Utilizador ou vizinhança inválidos para validar o produto."});
     }
-    console.log(productId, user.VizinhançaidVizinhança)
     const product = await productService.getProductByIdAndNeighborhood(productId, user.VizinhançaidVizinhança); 
     if (!product) return res.status(404).json({ error: "Produto não encontrado ou não pertence à sua vizinhança." });
     res.status(200).json({ message: "Produto obtido com sucesso", product });
@@ -305,8 +304,6 @@ const createProductController = async (req, res, next) => {
     }
 
     // Debug: Logar o que multer colocou em req.body e req.file
-    console.log("createProductController req.file:", req.file);
-    console.log("createProductController req.body:", req.body);
 
     const {
       nomeProduto, // string
@@ -454,7 +451,6 @@ const updateProductController = async (req, res, next) => {
         try {
             if (fs.existsSync(oldImagePathToDelete)) {
                 fs.unlinkSync(oldImagePathToDelete);
-                console.log("Imagem antiga apagada:", oldImagePathToDelete);
             }
         } catch (e) {
             console.error("Erro ao apagar imagem antiga:", oldImagePathToDelete, e);
