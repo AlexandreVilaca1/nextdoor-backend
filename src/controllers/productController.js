@@ -1,7 +1,6 @@
 
 const productService = require("../services/productService");
 const userService = require("../services/userService");
-const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
@@ -229,45 +228,6 @@ const getProductsByMyNeighborhoodController = async (req, res) => {
     res.status(500).json({ error: "Erro interno ao buscar produtos da vizinhança." });
   }
 };
-
-// Crie o diretório de uploads se não existir
-const UPLOADS_DIR = path.join(__dirname, '..', 'public', 'uploads'); // Ajuste '..' para a raiz do projeto
-if (!fs.existsSync(UPLOADS_DIR)) {
-    try {
-        fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-        console.log(`Diretório de uploads criado: ${UPLOADS_DIR}`);
-    } catch (error) {
-        console.error(`Erro ao criar diretório de uploads ${UPLOADS_DIR}:`, error);
-    }
-}
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, UPLOADS_DIR);
-    },
-    filename: function (req, file, cb) {
-        const extension = path.extname(file.originalname);
-        cb(null, `${uuidv4()}${extension}`);
-    }
-});
-
-const imageFileFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-        cb(null, true);
-    } else {
-        // Rejeita o arquivo, mas não lança um erro que para a requisição imediatamente
-        // O controller pode então verificar se req.file existe
-        cb(null, false);
-        // Se quiser lançar um erro que pode ser capturado por um error handler:
-        // cb(new Error('Apenas ficheiros de imagem são permitidos!'), false);
-    }
-};
-
-const uploadMiddleware = multer({
-    storage: storage,
-    fileFilter: imageFileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 } // Limite de 5MB
-});
 
 // const createProductController = async (req, res, next) => { // Adicione next para passar erros para o error handler
 //   const userType = req.user.idTipoUtilizador;
