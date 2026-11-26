@@ -63,13 +63,24 @@ const getTasksCreationByCategoryController = async (req, res) => {
 
 const getTasksCreationByNeighborhoodController = async (req, res) => {
   const userId = req.user.idUtilizador;
+  const page = parseInt(req.query.page) || 1;
   try {
     const findUser = await userService.getUser(userId);
     const neighborhoodId = findUser.VizinhançaidVizinhança;
-    const task = await taskCreationService.getTasksCreationByNeighborhood(
-      neighborhoodId
-    );
-    res.status(200).json({ message: "Task fetched successfully", task: task });
+
+    const { rows: task, count: total } =
+      await taskCreationService.getTasksCreationByNeighborhood(
+        neighborhoodId,
+        page
+      );
+
+    res.status(200).json({
+      message: "Task fetched successfully",
+      task,
+      total,
+      page,
+      limit: 40,
+    });
   } catch (error) {
     res.status(500).json({ error: "Task not found" });
   }
@@ -85,31 +96,39 @@ const createTaskCreationController = async (req, res) => {
   } = req.body;
 
   const userId = req.user.idUtilizador;
-  
-  if (
-    !nomeTarefa ||
-    !categoriaTarefaidCategoriaTarefa
-  ) {
+
+  if (!nomeTarefa || !categoriaTarefaidCategoriaTarefa) {
     return res.status(400).json({ error: "Missing required fields." });
   }
-  
+
   if (nomeTarefa.length > 100) {
-    return res.status(400).json({ error: "Task name needs to have less than 100 characters" });
+    return res
+      .status(400)
+      .json({ error: "Task name needs to have less than 100 characters" });
   }
-  
+
   const startDate = new Date(dataInicio);
   const endDate = new Date(dataFim);
-  
+
   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
     return res.status(400).json({ error: "Invalid date format." });
   }
-  
+
   if (startDate > endDate) {
     return res
-    .status(400)
-    .json({ error: "Start date must be before or equal to end date." });  
+      .status(400)
+      .json({ error: "Start date must be before or equal to end date." });
   }
-  
+
+  const millisecondsPerDay = 1000 * 60 * 60 * 24;
+  const differenceInDays = (endDate - startDate) / millisecondsPerDay;
+
+  if (differenceInDays > 7) {
+    return res
+      .status(400)
+      .json({ error: "The task duration cannot exceed 7 days." });
+  }
+
   try {
     const newTask = await taskCreationService.createTaskCreation({
       nomeTarefa,
@@ -125,16 +144,22 @@ const createTaskCreationController = async (req, res) => {
       .json({ message: "Task successfully created", task: newTask });
   } catch (error) {
     console.error("Error creating task:", error);
-    res.status(500).json({ error: "Error creating task" });
-
+    res.status(500).json({ error: error.message || "Error creating task" });
   }
 };
 
 const updateTaskCreationController = async (req, res) => {
   const { taskCreationId } = req.params;
   const updateFields = req.body;
+  // const userId = req.user.idUtilizador;
 
   try {
+      // const findTask = await getTaskCreationByIdController(taskCreationId);
+      // const taskCreator = findTask.UtilizadoridUtilizador;
+      // if(taskCreator !== userId)
+      // {
+      //   throw new Error("Apenas autorizado a editar as suas próprias tarefas");
+      // }
     if (updateFields.dataInicio && updateFields.dataFim) {
       const startDate = new Date(updateFields.dataInicio);
       const endDate = new Date(updateFields.dataFim);
@@ -152,7 +177,7 @@ const updateTaskCreationController = async (req, res) => {
 
     const updated = await taskCreationService.updateTaskCreation(
       taskCreationId,
-      updateFields,
+      updateFields
     );
 
     if (updated === 0) {

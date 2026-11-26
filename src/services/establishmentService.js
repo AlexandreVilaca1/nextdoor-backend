@@ -80,6 +80,28 @@ const deleteEstablishment = async (establishmentId) => {
   }
 };
 
+const getAllEstablishments = async () => {
+  try {
+    const establishments = await Estabelecimento.findAll({
+      include: [ // É importante incluir os dados de Endereço e Vizinhanca para exibição no frontend
+        {
+          model: Endereco,
+          as: 'Endereco', // Certifique-se que este alias corresponde ao definido no seu modelo Estabelecimento
+        },
+        {
+          model: Vizinhanca,
+          as: 'Vizinhanca', // Certifique-se que este alias corresponde
+        },
+      ],
+      // Você pode adicionar uma ordenação se desejar, ex: order: [['nomeEstabelecimento', 'ASC']]
+    });
+    return establishments;
+  } catch (error) {
+    console.error("Erro ao buscar todos os estabelecimentos no serviço (getAllEstablishments):", error);
+    throw error;
+  }
+};
+
 module.exports = {
   getEstablishmentsByNeighborhood,
   getEstablishments,
@@ -87,4 +109,5 @@ module.exports = {
   createEstablishment,
   updateEstablishment,
   deleteEstablishment,
+  getAllEstablishments,
 };

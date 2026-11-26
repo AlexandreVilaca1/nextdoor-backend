@@ -142,6 +142,34 @@ const deleteEstablishmentController = async (req, res) => {
   }
 };
 
+const getAllEstablishmentsAdminController = async (req, res) => {
+  const userType = req.user.idTipoUtilizador; // Pega o tipo de usuário do token decodificado
+
+  try {
+    // Verifica se o usuário é um administrador (idTipoUtilizador === 1)
+    if (userType !== 1) {
+      return res.status(403).json({ error: "Access denied. Only administrators can perform this action." });
+    }
+
+    // Chama o serviço para buscar todos os estabelecimentos
+    // Supondo que você tenha uma função no seu service como `getAllEstablishments`
+    const establishments = await establishmentService.getAllEstablishments();
+
+    if (!establishments || establishments.length === 0) {
+      // Pode optar por retornar 200 com array vazio ou 404 se preferir que "nenhum encontrado" seja um erro
+      return res.status(200).json({ establishments: [] }); // Frontend espera uma chave 'establishments'
+    }
+
+    // Retorna os estabelecimentos encontrados
+    res.status(200).json({ establishments: establishments }); // Garanta que a resposta é um objeto com a chave 'establishments'
+
+  } catch (error) {
+    console.error("Error in getAllEstablishmentsAdminController:", error);
+    // Evite expor detalhes do erro ao cliente em produção, mas logue no servidor
+    res.status(500).json({ error: "Internal server error while fetching establishments." });
+  }
+};
+
 module.exports = {
   getEstablishmentsByNeighborhoodController,
   getEstablishmentsController,
@@ -149,4 +177,5 @@ module.exports = {
   createEstablishmentController,
   updateEstablishmentController,
   deleteEstablishmentController,
+  getAllEstablishmentsAdminController,
 };

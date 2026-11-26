@@ -51,14 +51,17 @@ criacaoTarefa.belongsTo(estadoCriacaoTarefa, {
 
 Produto.belongsTo(Estabelecimento, {
   foreignKey: "EstabelecimentoidEstabelecimento",
+  as: 'Estabelecimento'
 });
 
 Produto.belongsTo(estadoProduto, {
   foreignKey: "estadoProdutoidEstadoProduto",
+  as: 'estadoProduto'
 });
 
 Produto.belongsTo(tipoProduto, {
   foreignKey: "tipoProdutoidTipoProduto",
+  as: 'tipoProduto'
 });
 
 resgateCodigo.belongsTo(Produto, {

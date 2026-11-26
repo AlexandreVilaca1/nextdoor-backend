@@ -1,17 +1,20 @@
 const notificationService = require("../services/notificationService");
 
-//Criador da tarefa vê a notificação e aceita ou rejeita
 const getNotificationController = async (req, res) => {
   const userId = req.user.idUtilizador;
+  const page = parseInt(req.query.page) || 1;
+
   try {
-    const notifications = await notificationService.getNotification(userId);
-    res
-      .status(200)
-      .json({
-        message: "Notification fetched successfully",
-        notification: notifications,
-      });
+    const { notifications, total } = await notificationService.getNotification(userId, page);
+    res.status(200).json({
+      message: "Notification fetched successfully",
+      notifications,
+      total,
+      page,
+      limit: 12, 
+    });
   } catch (error) {
+    console.error("Error in controller:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -36,7 +39,6 @@ const getNotificationbyIdController = async (req, res) => {
   }
 };
 
-//Ao realizar a tarefa cria a notificação
 const createNotificationController = async (req, res) => {
   const { mensagem, realizacaoTarefaidRealizacaoTarefa } = req.body;
   const dataEnvio = new Date();

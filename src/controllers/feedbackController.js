@@ -43,7 +43,7 @@ const createfeedbackAvaliacaoController = async (req, res) => {
       feedbackAvaliacao: result,
     });
   } catch (error) {
-    console.log(error);
+    console.error("Erro ao criar feedback:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

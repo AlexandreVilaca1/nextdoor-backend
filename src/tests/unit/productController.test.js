@@ -1,209 +1,301 @@
 const productController = require("../../controllers/productController");
 const productService = require("../../services/productService");
+const userService = require("../../services/userService");
 
 jest.mock("../../services/productService");
+jest.mock("../../services/userService");
+
+const mockProduct = {
+  idProduto: 6,
+  nomeProduto: "pasta dos dentes",
+  descricaoProduto: "marca: colgate",
+  precoProduto: 3,
+  imagemProduto: "/uploads/182742123-21324189.png",
+  tipoProdutoidTipoProduto: 3,
+  estadoProdutoidEstadoProduto: 2,
+  EstabelecimentoidEstabelecimento: 4,
+};
 
 describe("Product Controller", () => {
-  let req, res;
+  let req, res, next;
 
   beforeEach(() => {
-    req = { params: {}, body: {} };
+    req = {
+      params: {},
+      body: {},
+      query: {},
+      user: { idUtilizador: 1, idTipoUtilizador: 1 },
+    };
     res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     };
+    next = jest.fn();
+
+    userService.fetchUserByIdInternal.mockResolvedValue({
+      idUtilizador: 1,
+      VizinhançaidVizinhança: 10,
+    });
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  test("should fetch products by ID", async () => {
-    const mockProduct = {
-      idProduto: 6,
-      nomeProduto: "pasta dos dentes",
-      descricaoPorduto: "marca: colgate",
-      precoProduto: 3,
-      imagemProduto: "182742123-21324189.png",
-      tipoProdutoidTipoProduto: 3,
-      estadoProdutoidEstadoPorduto: 2,
-      EstabelecimentoidEstabelecimento: 4,
-    };
-    req.params.productId = 6;
+  describe("getProductByIdController", () => {
+    test("should fetch a product from the user's neighborhood", async () => {
+      req.params.productId = "6";
+      productService.getProductByIdAndNeighborhood.mockResolvedValue(mockProduct);
 
-    productService.getProductById.mockResolvedValue(mockProduct);
+      await productController.getProductByIdController(req, res);
 
-    await productController.getProductByIdController(req, res);
+      expect(userService.fetchUserByIdInternal).toHaveBeenCalledWith(1);
+      expect(productService.getProductByIdAndNeighborhood).toHaveBeenCalledWith(
+        "6",
+        10
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Produto obtido com sucesso",
+        product: mockProduct,
+      });
+    });
 
-    expect(productService.getProductById).toHaveBeenCalledWith(6);
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      message: "Product fetched successfully",
-      product: mockProduct,
+    test("should answer 401 when there is no authenticated user", async () => {
+      req.user = undefined;
+
+      await productController.getProductByIdController(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(productService.getProductByIdAndNeighborhood).not.toHaveBeenCalled();
+    });
+
+    test("should answer 404 when the product is not in the neighborhood", async () => {
+      req.params.productId = "999";
+      productService.getProductByIdAndNeighborhood.mockResolvedValue(null);
+
+      await productController.getProductByIdController(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
     });
   });
 
-  test("should fetch products by type", async () => {
-    const mockProducts = [
-      {
-        idProduto: 2,
-        nomeProduto: "polo",
-        descricaoPorduto: "marca: hugo boss",
-        precoProduto: 40,
-        imagemProduto: "26124921454-726129314.png",
-        tipoProdutoidTipoProduto: 2,
-        estadoProdutoidEstadoPorduto: 2,
-        EstabelecimentoidEstabelecimento: 4,
-      },
-      {
-        idProduto: 3,
-        nomeProduto: "calça de ganga",
-        descricaoPorduto: "marca: Levis",
-        precoProduto: 70,
-        imagemProduto: "123814701-134968134.png",
-        tipoProdutoidTipoProduto: 2,
-        estadoProdutoidEstadoPorduto: 2,
-        EstabelecimentoidEstabelecimento: 1,
-      },
-    ];
-    req.params.typeId = 2;
+  describe("getProductByTypeController", () => {
+    test("should fetch products by type with default pagination", async () => {
+      const page = {
+        products: [mockProduct],
+        totalItems: 1,
+        totalPages: 1,
+        currentPage: 1,
+      };
+      req.params.typeId = "3";
+      productService.getProductByTypeAndNeighborhood.mockResolvedValue(page);
 
-    productService.getProductByType.mockResolvedValue(mockProducts);
+      await productController.getProductByTypeController(req, res);
 
-    await productController.getProductByTypeController(req, res);
-
-    expect(productService.getProductByType).toHaveBeenCalledWith(2);
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      message: "Product fetched successfully",
-      product: mockProducts,
+      expect(productService.getProductByTypeAndNeighborhood).toHaveBeenCalledWith(
+        "3",
+        10,
+        1,
+        12
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Produtos obtidos com sucesso por tipo",
+        ...page,
+      });
     });
   });
 
-  test("should fetch products by establishment", async () => {
-    const mockProducts = [
-      {
-        idProduto: 4,
-        nomeProduto: "arroz",
-        descricaoPorduto: "marca: Caçarola",
-        precoProduto: 2,
-        imagemProduto: "483291413-319319743.png",
-        tipoProdutoidTipoProduto: 2,
-        estadoProdutoidEstadoPorduto: 2,
-        EstabelecimentoidEstabelecimento: 1,
-      },
-      {
-        idProduto: 5,
-        nomeProduto: "massa",
-        descricaoPorduto: "marca: Milaneza",
-        precoProduto: 3,
-        imagemProduto: "134913491-341954319.png",
-        tipoProdutoidTipoProduto: 2,
-        estadoProdutoidEstadoPorduto: 2,
-        EstabelecimentoidEstabelecimento: 1,
-      },
-    ];
+  describe("getProductByEstablsihmentController", () => {
+    test("should fetch the products of an establishment in the neighborhood", async () => {
+      const page = {
+        products: [mockProduct],
+        totalItems: 1,
+        totalPages: 1,
+        currentPage: 1,
+      };
+      req.params.establishmentId = "4";
+      productService.getProductsByEstablishmentAndNeighborhood.mockResolvedValue(
+        page
+      );
 
-    req.params.establishmentId = 1;
+      await productController.getProductByEstablsihmentController(req, res);
 
-    productService.getProductByEstablishment.mockResolvedValue(mockProducts);
+      expect(
+        productService.getProductsByEstablishmentAndNeighborhood
+      ).toHaveBeenCalledWith("4", 10, 1, 12);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Produtos do estabelecimento na vizinhança obtidos com sucesso",
+        ...page,
+      });
+    });
 
-    await productController.getProductByEstablishmentController(req, res);
+    test("should answer 404 when the establishment has no products", async () => {
+      req.params.establishmentId = "4";
+      productService.getProductsByEstablishmentAndNeighborhood.mockResolvedValue({
+        products: [],
+        totalItems: 0,
+        totalPages: 0,
+        currentPage: 1,
+      });
 
-    expect(productService.getProductByEstablishment).toHaveBeenCalledWith(1);
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      message: "Product fetched successfully",
-      product: mockProducts,
+      await productController.getProductByEstablsihmentController(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
     });
   });
 
-  test("should fetch all products", async () => {
-    const mockProduct = {
-      idProduto: 6,
-      nomeProduto: "pasta dos dentes",
-      descricaoPorduto: "marca: colgate",
-      precoProduto: 3,
-      imagemProduto: "182742123-21324189.png",
-      tipoProdutoidTipoProduto: 3,
-      estadoProdutoidEstadoPorduto: 2,
-      EstabelecimentoidEstabelecimento: 4,
-    };
-    const mockProductsArray = [mockProduct];
-    productService.getProduct.mockResolvedValue(mockProductsArray);
+  describe("getProductController", () => {
+    test("should fetch all products", async () => {
+      productService.getProduct.mockResolvedValue([mockProduct]);
 
-    await productController.getProductController(req, res);
+      await productController.getProductController(req, res);
 
-    expect(productService.getProduct).toHaveBeenCalled();
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: "Products fetched successfully",
-        product: mockProductsArray,
-      })
-    );
+      expect(productService.getProduct).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Produtos obtidos com sucesso",
+        products: [mockProduct],
+      });
+    });
   });
 
-  test("should create a product", async () => {
-    const productBody = {
+  describe("getProductsByMyNeighborhoodController", () => {
+    test("should fetch the products of the user's neighborhood", async () => {
+      const page = {
+        products: [mockProduct],
+        totalItems: 1,
+        totalPages: 1,
+        currentPage: 1,
+      };
+      productService.getProductsByNeighborhoodForUser.mockResolvedValue(page);
+
+      await productController.getProductsByMyNeighborhoodController(req, res);
+
+      expect(productService.getProductsByNeighborhoodForUser).toHaveBeenCalledWith(
+        10,
+        1,
+        12
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Produtos da vizinhança obtidos com sucesso",
+        ...page,
+      });
+    });
+
+    test("should answer 401 when there is no authenticated user", async () => {
+      req.user = undefined;
+
+      await productController.getProductsByMyNeighborhoodController(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+    });
+
+    test("should answer 400 when the user has no neighborhood", async () => {
+      userService.fetchUserByIdInternal.mockResolvedValue({
+        idUtilizador: 1,
+        VizinhançaidVizinhança: null,
+      });
+
+      await productController.getProductsByMyNeighborhoodController(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+  });
+
+  describe("createProductController", () => {
+    const validBody = {
       nomeProduto: "gelado",
       descricaoProduto: "marca: ola",
-      precoProduto: 4,
-      tipoProdutoidTipoProduto: 2,
-      estadoProdutoidEstadoProduto: 2,
-      EstabelecimentoidEstabelecimento: 1,
+      precoProduto: "4",
+      stockProduto: "5",
+      tipoProdutoidTipoProduto: "2",
+      estadoProdutoidEstadoProduto: "2",
+      EstabelecimentoidEstabelecimento: "1",
     };
-    const mockFile = { filename: "11532421-372193145.png" };
-    const expectedDataForService = {
-      ...productBody,
-      imagemProduto: mockFile.filename,
-    };
-    const mockReturnedProduct = { idProduto: 4, ...expectedDataForService };
 
-    req.body = productBody;
-    req.file = mockFile;
+    test("should create a product with parsed numbers", async () => {
+      const mockReturnedProduct = { idProduto: 4, nomeProduto: "gelado" };
+      req.body = { ...validBody };
+      productService.createProduct.mockResolvedValue(mockReturnedProduct);
 
-    productService.createProduct.mockResolvedValue(mockReturnedProduct);
+      await productController.createProductController(req, res, next);
 
-    await productController.createProductController(req, res);
+      expect(productService.createProduct).toHaveBeenCalledWith({
+        nomeProduto: "gelado",
+        precoProduto: 4,
+        descricaoProduto: "marca: ola",
+        imagemProduto: null,
+        tipoProdutoidTipoProduto: 2,
+        estadoProdutoidEstadoProduto: 2,
+        EstabelecimentoidEstabelecimento: 1,
+        stockProduto: 5,
+      });
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Produto adicionado com sucesso",
+        product: mockReturnedProduct,
+      });
+    });
 
-    expect(productService.createProduct).toHaveBeenCalledWith(
-      expectedDataForService
-    );
-    expect(res.status).toHaveBeenCalledWith(201);
+    test("should answer 400 when a required field is missing", async () => {
+      req.body = { ...validBody, stockProduto: undefined };
 
-    expect(res.json).toHaveBeenCalledWith({
-      message: "Product added successfully",
-      product: mockReturnedProduct,
+      await productController.createProductController(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(productService.createProduct).not.toHaveBeenCalled();
+    });
+
+    test("should answer 403 for non admin users", async () => {
+      req.user = { idUtilizador: 1, idTipoUtilizador: 2 };
+      req.body = { ...validBody };
+
+      await productController.createProductController(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(productService.createProduct).not.toHaveBeenCalled();
     });
   });
 
-  test("should update a product", async () => {
-    req.params.productId = 6;
-    req.body = { precoProduto: 4 };
-    productService.updateProduct.mockResolvedValue([6]);
+  describe("updateProductController", () => {
+    test("should update a product", async () => {
+      req.params.productId = "6";
+      req.body = { precoProduto: "5" };
+      productService.getProductByIdForUpdate.mockResolvedValue({
+        idProduto: 6,
+        imagemProduto: null,
+      });
+      productService.updateProduct.mockResolvedValue(1);
 
-    await productController.updateProductController(req, res);
+      await productController.updateProductController(req, res, next);
 
-    expect(productService.updateProduct).toHaveBeenCalledWith(6, {
-      precoProduto: 4,
-    });
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      message: "Product updated successfully",
+      expect(productService.updateProduct).toHaveBeenCalledWith("6", {
+        precoProduto: 5,
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Produto atualizado com sucesso",
+        product: 1,
+      });
     });
   });
 
-  test("should delete a product", async () => {
-    req.params.productId = 6;
-    productService.deleteProduct.mockResolvedValue(6);
+  describe("deleteProductController", () => {
+    test("should delete a product", async () => {
+      req.params.productId = "6";
+      productService.deleteProduct.mockResolvedValue(1);
 
-    await productController.deleteProductController(req, res);
+      await productController.deleteProductController(req, res);
 
-    expect(productService.deleteProduct).toHaveBeenCalledWith(6);
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      message: "Product deleted successfully",
+      expect(productService.deleteProduct).toHaveBeenCalledWith("6");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Produto excluído com sucesso",
+      });
     });
   });
 });
