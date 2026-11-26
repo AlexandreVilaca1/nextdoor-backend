@@ -34,11 +34,8 @@ const businessProcessesRoutes = require('./routes/businessProcessRoutes');
 
 app.use(express.json());
 
-// app.use('/uploads', express.static('src/uploads'));
-//app.use('/uploads', express.static(path.join(__dirname, 'src', 'uploads'))); 
 app.use(express.urlencoded({ extended: true })); 
 const staticUploadsPath = path.join(__dirname,'uploads');
-console.log("Configurando express.static para servir '/uploads' de:", staticUploadsPath); // Para depuração
 app.use('/uploads', express.static(staticUploadsPath));
 
 app.use("/api/users", userRoutes);
