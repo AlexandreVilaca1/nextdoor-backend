@@ -12,8 +12,8 @@ const getTasksInRealization = async (userId) => {
     const tasks = await realizacaoTarefa.findAll({
       where: {
         UtilizadoridUtilizador: userId,
-        estadoRealizacaoTarefaidEstadoRealizacaoTarefa: 3,
-      }, //em execução/realização
+        estadoRealizacaoTarefaidEstadoRealizacaoTarefa: 3, //em execução
+      }, 
       include: [
         {
           model: criacaoTarefa,
@@ -25,6 +25,7 @@ const getTasksInRealization = async (userId) => {
         { model: estadoRealizacaoTarefa },
         { model: Utilizador },
       ],
+      order: [['dataRealizacao', 'DESC']],
     });
 
     return tasks;
@@ -40,12 +41,13 @@ const getTasksRealizeted = async (userId) => {
       where: {
         UtilizadoridUtilizador: userId,
         estadoRealizacaoTarefaidEstadoRealizacaoTarefa: 4,
-      }, //tarefas concluídas
+      },
       include: [
         { model: criacaoTarefa },
         { model: estadoRealizacaoTarefa },
         { model: Utilizador },
       ],
+      order: [['dataRealizacao', 'DESC']],
     });
 
     return tasks;
@@ -67,6 +69,7 @@ const getTasksRealizationByUser = async (userId, neighborhoodId) => {
           where: { VizinhançaidVizinhança: neighborhoodId },
         },
       ],
+      order: [['dataRealizacao', 'DESC']],
     });
 
     return tasks;
@@ -92,18 +95,37 @@ const updateTaskRealization = async (
   userId
 ) => {
   try {
-    const [updatedRows] = await realizacaoTarefa.update(updatedFields, {
-      where: {
-        idRealizacaoTarefa: taskRealizationId,
-        UtilizadoridUtilizador: userId,
-      },
+    const realization = await realizacaoTarefa.findOne({
+      where: { idRealizacaoTarefa: taskRealizationId },
+      include: [
+        {
+          model: criacaoTarefa,
+        },
+      ],
     });
+
+    if (!realization) {
+      throw new Error('Realização da tarefa não encontrada');
+    }
+
+    const isTaskCreator = realization.criacaoTarefa.UtilizadoridUtilizador === userId;
+    const isTaskExecutor = realization.UtilizadoridUtilizador === userId;
+
+    if (!isTaskCreator && !isTaskExecutor) {
+      throw new Error('Não autorizado a atualizar esta tarefa');
+    }
+
+    const [updatedRows] = await realizacaoTarefa.update(updatedFields, {
+      where: { idRealizacaoTarefa: taskRealizationId },
+    });
+
     return updatedRows;
   } catch (error) {
-    console.error("Error updating task creation:", error);
+    console.error('Erro ao atualizar realização da tarefa:', error);
     throw error;
   }
 };
+
 
 const deleteTaskRealization = async (taskRealizationId, userId) => {
   try {

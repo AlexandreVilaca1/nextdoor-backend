@@ -3,7 +3,7 @@ const { tipoProduto } = require('../models/association/associations'); // Import
 const getAllProductTypes = async () => {
   try {
     const types = await tipoProduto.findAll({
-      order: [['tipoProduto', 'ASC']] // Ordena pelo nome do tipo
+      order: [['tipoProduto', 'ASC']]
     });
     return types;
   } catch (error) {

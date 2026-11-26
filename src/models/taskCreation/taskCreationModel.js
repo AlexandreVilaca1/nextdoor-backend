@@ -23,18 +23,6 @@ module.exports = (sequelize, DataTypes) => {
           type: DataTypes.STRING,
           allowNull: true,
         },
-        UtilizadoridUtilizador: {
-          type: DataTypes.INTEGER,
-          allowNull: false,
-        },
-        categoriaTarefaidCategoriaTarefa: {
-          type: DataTypes.INTEGER,
-          allowNull: false,
-        },
-        estadoCriacaoTarefaidEstadoCriacaoTarefa: {
-          type: DataTypes.INTEGER,
-          allowNull: false,
-        },
       },
       {
         tableName: "criacaoTarefa",

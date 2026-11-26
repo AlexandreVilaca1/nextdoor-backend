@@ -32,4 +32,16 @@ const deleteNeighborhood = async (neighborhoodId) => {
   }
 };
 
-module.exports = { getNeighborhood, createNeighborhood, deleteNeighborhood };
+const findNeighborhoodByName = async (nomeFreguesia) => {
+  try {
+    const neighborhood = await Vizinhanca.findOne({ // Assumindo que seu model se chama Vizinhanca
+      where: { nomeFreguesia: nomeFreguesia } // Sequelize é case-sensitive por padrão no `where` dependendo do DB. Pode precisar de `sequelize.where(sequelize.fn('LOWER', sequelize.col('nomeFreguesia')), '=', nomeFreguesia.toLowerCase())` para case-insensitive.
+    });
+    return neighborhood;
+  } catch (error) {
+    console.error("Error finding neighborhood by name in service:", error);
+    throw error;
+  }
+};
+
+module.exports = { getNeighborhood, createNeighborhood, deleteNeighborhood, findNeighborhoodByName };

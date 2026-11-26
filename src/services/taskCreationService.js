@@ -74,9 +74,11 @@ const getTaskCreationById = async (taskCreationId, neighborhoodId) => {
   }
 };
 
-const getTasksCreationByNeighborhood = async (neighborhoodId) => {
+const getTasksCreationByNeighborhood = async (neighborhoodId, page) => {
+  const limit = 40;
+  const offset = (page - 1) * limit;
   try {
-    const tasks = await criacaoTarefa.findAll({
+    const result = await criacaoTarefa.findAndCountAll({
       where: { estadoCriacaoTarefaidEstadoCriacaoTarefa: 1 },
       include: [
         {
@@ -89,14 +91,19 @@ const getTasksCreationByNeighborhood = async (neighborhoodId) => {
         { model: categoriaTarefa },
         { model: estadoCriacaoTarefa },
       ],
+      order: [['dataInicio', 'DESC']],
+      limit,
+      offset,
+      distinct: true,
     });
 
-    return tasks;
+    return result;
   } catch (error) {
     console.error("Error fetching task creation list:", error);
     throw error;
   }
 };
+
 
 const getTasksCreationByCategory = async (categoryId, neighborhoodId) => {
   try {

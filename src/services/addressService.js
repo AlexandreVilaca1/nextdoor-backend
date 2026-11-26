@@ -34,4 +34,16 @@ const deleteAddress = async (addressId) => {
   }
 };
 
-module.exports = { createAddress, updateAddress, deleteAddress };
+const findAllAddresses = async () => {
+  try {
+    const addresses = await Endereco.findAll({
+    attributes: ['idEndereco','numeroPorta','distrito','freguesia','codigoPostal','rua'],      
+    });
+    return addresses;
+  } catch (error) {
+    console.error("Erro ao buscar todos os endereços no serviço:", error);
+    throw error;
+  }
+};
+
+module.exports = { createAddress, updateAddress, deleteAddress,findAllAddresses };
