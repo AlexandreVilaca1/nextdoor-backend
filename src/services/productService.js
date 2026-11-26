@@ -330,13 +330,13 @@ const getProductsByEstablishmentAndNeighborhood = async (establishmentId, neighb
           // include: [{ model: Endereco, as: 'EnderecoEstabelecimento', attributes: [/* campos do endereço */] }]
         },
         {
-          model: TipoProduto,   // Nome da variável do modelo TipoProduto como importado
-          as: 'tipoProduto',    // Alias da associação Produto -> TipoProduto
+          model: tipoProduto,   // Modelo importado no topo do ficheiro
+          as: 'tipoProduto',    // Alias da associação Produto -> tipoProduto
           attributes: ['idTipoProduto', 'tipoProduto'] // 'tipoProduto' aqui é o nome do tipo
         },
         {
-          model: EstadoProduto, // Nome da variável do modelo EstadoProduto como importado
-          as: 'estadoProduto',  // Alias da associação Produto -> EstadoProduto
+          model: estadoProduto, // Modelo importado no topo do ficheiro
+          as: 'estadoProduto',  // Alias da associação Produto -> estadoProduto
           attributes: ['idEstadoProduto', 'estadoProduto'] // 'estadoProduto' aqui é o nome do estado
         }
       ],
