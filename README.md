@@ -21,7 +21,13 @@ start the server.
 
 ### 3. Create a `.env` File
 
-In the **root of the project**, create a file named `.env` with the following structure:
+In the **root of the project**, copy the example and adjust the values:
+
+```bash
+cp .env.example .env
+```
+
+The variables are:
 
 ```env
 DB_SERVER=           # e.g., localhost
