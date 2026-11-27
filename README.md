@@ -1,75 +1,169 @@
-# NextDoor Backend Project
+# NextDoor Backend
 
-This project contains the backend of the NextDoor application: a neighbourhood platform where
-users publish tasks, earn points by helping their neighbours and redeem those points for
-products from partner establishments.
+REST API for NextDoor, a neighbourhood platform where residents publish tasks, earn points by
+helping their neighbours and redeem those points for products from partner establishments.
 
-## 🚀 Getting Started
+Developed for the Project and Software Development (PDS) course — LESI, 2nd year, 2nd semester,
+IPCA (group G07PL). This repository keeps the original commit history and adds the maintenance
+fixes listed under [Notes](#notes).
 
-### 1. Clone the Repository
+## Scope
 
-```bash
-git clone https://github.com/AlexandreVilaca1/nextdoor-backend.git
-cd nextdoor-backend
+The API supports the full neighbourhood cycle:
+
+- Authentication and authorisation with JWT (registration, login, protected routes).
+- Task creation, listing by neighbourhood and category, editing and deletion.
+- Task realisation, including validation, point collection and abandonment penalties.
+- Notifications per user.
+- Product catalogue filtered by the user's neighbourhood, with pagination.
+- Establishments, neighbourhoods, addresses, categories and status lookup tables.
+- Redemption codes, complaints and task feedback.
+- Administrative endpoints for users, products, establishments, categories and redemption codes.
+
+## Tech stack
+
+| Layer | Technology |
+| --- | --- |
+| Runtime | Node.js |
+| HTTP framework | Express 5 |
+| ORM | Sequelize 6 |
+| Database | SQL Server (`mssql`) |
+| Authentication | `jsonwebtoken`, `bcrypt` |
+| File uploads | `multer` |
+| Testing | Jest, Supertest |
+
+## Architecture
+
+Requests go through four layers, each with a single responsibility:
+
+```
+routes/       route definition and middleware wiring
+controllers/  request validation and HTTP response
+services/     business rules and database access
+models/       Sequelize model definitions and associations
 ```
 
-### 2. Create the Database
+No route holds business logic, no controller queries the database directly, and no service depends
+on `req`/`res`.
 
-Create the schema in your SQL Server instance (tables, primary keys and foreign keys). The
-project does not use migrations or `sequelize.sync()`, so the tables have to exist before you
-start the server.
+```
+src/
+├── app.js                  entry point: global middleware, route mounting, listener
+├── config/db.js            Sequelize instance built from environment variables
+├── routes/                 15 routers, mounted under /api
+├── controllers/            15 controllers
+├── services/               business logic
+├── models/                 Sequelize models, grouped by domain
+│   └── association/associations.js
+├── middlewares/            authenticateToken, imageUploads
+└── tests/                  unit and integration suites
+```
 
-### 3. Create a `.env` File
+The API exposes 67 endpoints. Protected routes require `Authorization: Bearer <token>`; a missing
+token returns `401` and an invalid token returns `403`.
 
-In the **root of the project**, copy the example and adjust the values:
+Uploaded product images are written to `src/uploads/` (excluded from version control) and served
+from `/uploads/<filename>`.
+
+## Requirements
+
+- Node.js 18 or later (tested with Node 22)
+- npm 10
+- SQL Server instance with TCP/IP enabled and a user with access to the target database
+
+## Getting started
+
+### 1. Database schema
+
+Create the schema on the SQL Server instance (tables, primary keys and foreign keys). The project
+does not use migrations or `sequelize.sync()`, so the tables must exist before the server starts.
+
+### 2. Environment variables
+
+Copy the example file and adjust the values:
 
 ```bash
 cp .env.example .env
 ```
 
-The variables are:
+| Variable | Required | Description |
+| --- | --- | --- |
+| `DB_SERVER` | yes | SQL Server host, for example `localhost` |
+| `DB_DATABASE` | yes | Database name |
+| `DB_PORT` | yes | SQL Server port, for example `1433` |
+| `DB_USER` | yes | Database user |
+| `DB_PASSWORD` | yes | Database password |
+| `SECRET_KEY` | yes | Key used to sign and verify JWT tokens |
+| `PORT` | no | HTTP port, defaults to `3000` |
 
-```env
-DB_SERVER=           # e.g., localhost
-DB_DATABASE=         # e.g., NextDoor
-DB_PORT=             # e.g., 1433
-DB_USER=             # e.g., your_sql_user
-DB_PASSWORD=         # e.g., your_password
-SECRET_KEY=          # long random string, used to sign the JWT
-PORT=                # optional, defaults to 3000
-```
+`SECRET_KEY` must be long and random, and cannot change while issued tokens are in use: a new
+value invalidates every token already handed out.
 
-> ⚠️ Make sure your SQL Server instance has TCP/IP enabled and is listening on the specified port.
-
-### 4. Install Dependencies
+### 3. Install and run
 
 ```bash
 npm ci
-```
-
-### 5. Run the Project
-
-```bash
 node src/app.js
 ```
 
-The API is served on `http://localhost:3000` (or on the port defined in `PORT`) and uploaded
-images are served from `/uploads`. If the database connection fails, the process exits with
-code 1 and prints the error.
+The server listens on `http://localhost:3000` (or on `PORT`). If the database connection fails, the
+process logs the error and exits with code 1 instead of listening.
 
-### 6. Run the Tests
+### 4. Tests
 
 ```bash
 npm test
 ```
 
-The suites use mocked models and services, so no database is required.
+Four suites (35 tests) cover the product controller and service, the authentication middleware and
+the product routes through Supertest. Models and services are mocked, so no database is required.
 
----
+## API overview
 
-## ✅ Notes
+All resources are mounted under `/api`.
 
-- Ensure that your SQL Server instance is accessible via TCP/IP.
-- The user specified in `.env` must have permission to access the target database.
-- CORS only allows the frontend origin `http://localhost:5173` (the default Vite dev port).
-- This setup is intended for local development.
+| Resource | Prefix |
+| --- | --- |
+| Users | `/api/users` |
+| Products | `/api/products` |
+| Task creation | `/api/taskCreations` |
+| Task realisation | `/api/taskRealizations` |
+| Business processes | `/api/businessProcesses` |
+| Notifications | `/api/notifications` |
+| Establishments | `/api/establishments` |
+| Neighbourhoods | `/api/neighborhoods` |
+| Addresses | `/api/addresses` |
+| Redemption codes | `/api/redemptionCodes` |
+| Product types | `/api/product-types` |
+| Product status | `/api/product-status` |
+| Categories | `/api/categories` |
+| Complaints | `/api/complaints` |
+| Feedback | `/api/feedbacks` |
+
+Errors use the response shape `{ "error": "..." }`.
+
+## Notes
+
+- CORS accepts a single origin, `http://localhost:5173` (the frontend development server). The
+  origin is not configurable through environment variables yet.
+- The database schema is created by hand; there are no migrations.
+- Runtime uploads are not versioned; only the `.gitkeep` placeholder is tracked.
+- Compared with the delivered version, this branch removes the `sqlInjectionGuard` middleware (a
+  regex blacklist that rejected valid input while Sequelize already parameterises queries),
+  removes a duplicated `multer` configuration, replaces debug `console.log` calls with
+  `console.error` in the `catch` blocks, and fixes the HTTP status codes returned by
+  `authenticateToken`, by the error paths of `productController` and by the awaited database
+  connection in `app.js`.
+
+## Authors
+
+Group G07PL:
+
+- João Paulo Carvalho — [@carvalhojp26](https://github.com/carvalhojp26)
+- Pedro Alves
+- David Pinheiro
+- Alexandre Vilaça — [@AlexandreVilaca1](https://github.com/AlexandreVilaca1)
+
+## License
+
+MIT. See [LICENSE](LICENSE). Copyright (c) 2025 João Paulo Carvalho.
